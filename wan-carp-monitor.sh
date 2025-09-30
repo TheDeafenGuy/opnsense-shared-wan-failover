@@ -2,8 +2,8 @@
 # WAN CARP monitor for backup firewall
 # Only runs linkup start/stop when CARP state changes
 
-IF="em1"
-CARP_IF="em0_vlan352"   # interface carrying VIP
+IF="[replace with your WAN interface]"
+CARP_IF="[replace with interface that has CARP VIPS]"   # interface carrying VIP
 LOGTAG="carp-wan-monitor"
 PREV_STATE=""
 
