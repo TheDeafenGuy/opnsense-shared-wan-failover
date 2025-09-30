@@ -8,7 +8,7 @@ Scripts for WAN to be used by the secondary (BACKUP) OPNsense firewall in a HA s
 <p>When started, the script will check the CARP Status via ifconfig [interface name that has CARP VIPS] | grep -p MASTER.</p>
 <p>If the state is MASTER, then the script will run configctl interface linkup stop [WAN interface name]</p>
 <p>If the state is BACKUP, then the script will run configctl interface linkup start [WAN interface name]</p>
-<p>After this initial check, every 5 seconds the script will check the status again, and if it is the same as before, it will do nothing, but if it changes, it will run configctl interface linkup start/stop [WAN interface name] depending on what the state changes to</p>
+<p>After this initial check, every 5 seconds the script will check the status again, and if it is the same as before, it will do nothing, but if it changes, it will run configctl interface linkup start/stop [WAN interface name] depending on what the state changes to.</p>
 
 <h1>Getting the script working</h1>
 
