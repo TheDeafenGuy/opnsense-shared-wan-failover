@@ -12,6 +12,6 @@ Scripts for WAN to be used by a secondary (BACKUP) OPNsense firewall in a HA set
 
 <h1>Getting the script working</h1>
 
-<p>The provided script will not work in its current state. In order to get it to work, you will have to replace the IF and CARP_IF values in the script. Placeholders are currently in the place of the values by default.</p>
+<p>The provided script will not work in its current state. In order to get it to work, you will have to replace the IF and CARP_IF values in the script. Placeholders are currently in the place of the values by default. The IF value should be replaced with the name of the WAN interface, and the CARP_IF value should be replaced with the name of an interface carrying CARP VIPS (so the script can check whether the VIP status is MASTER or BACKUP).</p>
 
 <p>I reccomend also making this script run on boot. This can be done by putting a script in /usr/local/etc/rc.syshook.d/start/ that runs the wan-carp-monitor script (thats how I did it).</p>
