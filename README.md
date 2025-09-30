@@ -1,5 +1,5 @@
 # opnsense-shared-wan-failover
-Scripts for WAN to be used by the secondary (BACKUP) OPNsense firewall in a HA setup when a single WAN connection is shared between two firewalls.
+Scripts for WAN to be used by a secondary (BACKUP) OPNsense firewall in a HA setup when a single WAN connection is shared between two firewalls.
 
 <h2>Note that these instructions were written for OPNsense community 25.7</h2>
 
