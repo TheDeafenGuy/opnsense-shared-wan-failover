@@ -20,9 +20,11 @@ while true; do
         if [ "$CUR_STATE" = "MASTER" ]; then
             logger -t $LOGTAG "CARP MASTER: enabling $IF"
             /usr/local/sbin/configctl interface linkup start $IF
+            /usr/local/sbin/configctl dhcpd start            
         else
             logger -t $LOGTAG "CARP BACKUP: disabling $IF"
             /usr/local/sbin/configctl interface linkup stop $IF
+            /usr/local/sbin/configctl dhcpd stop            
         fi
         PREV_STATE="$CUR_STATE"
     fi
