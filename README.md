@@ -1,7 +1,8 @@
 # opnsense-shared-wan-failover
 Scripts for WAN to be used by a secondary (BACKUP) OPNsense firewall in a HA setup when a single WAN connection is shared between two firewalls.
 
-<h2>Note that these instructions were written for OPNsense community 25.7</h2>
+<h2>Note that these instructions were written for OPNsense community release 25.7</h2>
+<h2>IMPORTANT: THE CURRENT SCRIPT ONLY WORKS IF YOU ARE STILL USING ISC DHCP. KEA DHCP IS NOT SUPPORTED BY THIS SCRIPT. IN THE FUTURE, I WILL MAKE A VERSION FOR KEA DHCP THAT WILL ONLY TOGGLE WAN.</h2>
 
 <h1>How it works</h1>
 
