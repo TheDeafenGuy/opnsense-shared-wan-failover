@@ -11,4 +11,5 @@ Script for WAN to be used by a secondary (BACKUP) OPNsense firewall in a HA setu
 <p>Once done, the script will terminate and will not run again until another CARP event in which depending on the CARP state the script will perform enable/disable WAN</p>
 <p>As for logging, the script uses the built in logger and will log to /var/log/system/ </p>
 <p>This also means that you can search for these logs in the web dashboard under General. Events are logged at the NOTICE level.</p>
-
+<p>By default this script will also restart tailscale when the CARP state is MASTER. If you either don't have tailscale installed or do not want this behavior then you can comment out or remove that line in the script.</p>
+<p>Another default behavior of this script is that you will need to configure it based on your setup. Specifically, you need to tell the script what your WAN interface name is and the interface name of one of your CARP VIPS. These are at the beginning of the file. I have put placeholders in where they should be. For WAN, you want to replace the placeholder with your own interface name at "IF=" near the beginning of the file and for the CARP VIP interface replace the placeholder at "CARP_IF=". </p>
