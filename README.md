@@ -1,18 +1,14 @@
 # opnsense-shared-wan-failover
-Scripts for WAN to be used by a secondary (BACKUP) OPNsense firewall in a HA setup when a single WAN connection is shared between two firewalls.
+Script for WAN to be used by a secondary (BACKUP) OPNsense firewall in a HA setup when a single WAN connection is shared between two firewalls.
 
-<h2>Note that these instructions were written for OPNsense community release 25.7</h2>
+<h2>This has been tested as working on OPNsense 26.1.6</h2>
 
-<h1>How it works</h1>
 
-<p>When started, the script will check the CARP Status via ifconfig [interface name that has CARP VIPS] </p>
+<p>This script will be placed in the /usr/local/etc/rc.syshook.d/carp/ folder as when a change happens to CARP state all the scripts in this folder get triggered. For example, /usr/local/etc/rc.syshook.d/carp/50-wan-monitor </p>
+
 <p>If the state is MASTER, then the script will run configctl interface linkup stop [WAN interface name]</p>
 <p>If the state is BACKUP, then the script will run configctl interface linkup start [WAN interface name]</p>
-<p>After this initial check, every 5 seconds the script will check the status again, and if it is the same as before, it will do nothing, but if it changes, it will run configctl interface linkup start/stop [WAN interface name] depending on what the state changes to.</p>
-<p>Also, based on whether the carp state is master or backup, the dhcp server will be turned off/on (on if in master state, off if in backup state. I decided to add this to the script because setting up "Failover peer ip" in DHCP wasn't working for me so I then had the issue of my clients going to the secondary firewall's dhcp server when in backup mode for carp. Disabling DHCP on the secondary firewall fixed this issue for me). </p>
+<p>Once done, the script will terminate and will not run again until another CARP event in which depending on the CARP state the script will perform enable/disable WAN</p>
+<p>As for logging, the script uses the built in logger and will log to /var/log/system/ </p>
+<p>This also means that you can search for these logs in the web dashboard under General. Events are logged at the NOTICE level.</p>
 
-<h1>Getting the script working</h1>
-
-<p>The provided script will not work in its current state. In order to get it to work, you will have to replace the IF and CARP_IF values in the script. Placeholders are currently in place of the values by default. The IF value should be replaced with the name of the WAN interface, and the CARP_IF value should be replaced with the name of an interface carrying CARP VIPS (so the script can check whether the VIP status is MASTER or BACKUP).</p>
-
-<p>I recommend also making this script run on boot. This can be done by putting a script in /usr/local/etc/rc.syshook.d/start/ that runs the wan-carp-monitor script (that's how I did it).</p>
