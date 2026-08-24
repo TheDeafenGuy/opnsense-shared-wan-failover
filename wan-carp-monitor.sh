@@ -1,6 +1,6 @@
 #!/bin/sh
-IF="vtnet1"
-CARP_IF="vtnet0_vlan352"
+IF=""
+CARP_IF=""
 LOGTAG="carp-wan-monitor"
 PREV_STATE=""
 while true; do
