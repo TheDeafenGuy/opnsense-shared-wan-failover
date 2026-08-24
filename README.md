@@ -4,7 +4,7 @@ Script for WAN to be used by a secondary (BACKUP) OPNsense firewall in a HA setu
 <h2>This has been tested as working on OPNsense 26.1.6</h2>
 
 
-<p>This script will be placed in the /usr/local/etc/rc.syshook.d/carp/ folder as when a change happens to CARP state all the scripts in this folder get triggered. For example, /usr/local/etc/rc.syshook.d/carp/50-wan-monitor </p>
+<p>This script will be placed in the /usr/local/etc/rc.syshook.d/carp/ folder as when a change happens to CARP state all the scripts in this folder get triggered. For example, /usr/local/etc/rc.syshook.d/carp/50-wan-monitor is where I have my script </p>
 
 <p>If the state is MASTER, then the script will run configctl interface linkup stop [WAN interface name]</p>
 <p>If the state is BACKUP, then the script will run configctl interface linkup start [WAN interface name]</p>
