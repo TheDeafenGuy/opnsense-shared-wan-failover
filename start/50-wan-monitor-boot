@@ -1,0 +1,106 @@
+#!/bin/sh
+# ==============================================================================
+# Purpose: Automatically manages WAN link availability based on CARP state
+#          transitions to prevent IP and MAC address conflicts on shared WAN hardware.
+#
+# Execution Hook Locations:
+#   /usr/local/etc/rc.syshook.d/carp/50-wan-monitor   <- fires on CARP state transitions
+#   /usr/local/etc/rc.syshook.d/start/50-wan-monitor  <- symlink to this file, fires once at boot
+#
+# Why both locations are needed:
+#   The carp/ hook only fires on a MASTER<->BACKUP transition. On a fresh boot,
+#   CARP simply negotiates into a starting state with no "transition" event, so
+#   the carp/ hook never runs and OPNsense would bring up WAN unconditionally,
+#   defeating the whole purpose of this script. Running from start/ as well
+#   closes that gap. Since CARP needs a moment to negotiate after boot, this
+#   script waits/retries for a stable (non-INIT) state before acting when
+#   invoked at boot.
+#
+# Step-by-Step Process:
+# 1. Define physical WAN interface, CARP VLAN interface, and logging parameters.
+# 2. Query system networking status via `get_carp_state` to determine role,
+#    retrying briefly if CARP hasn't finished negotiating yet.
+# 3. If node transitions to / boots into MASTER:
+#    a. Log state event to syslog.
+#    b. Execute OPNsense backend command `interface linkup start` to initialize link and request IP.
+#    c. Restart Tailscale daemon to rebind routing to active interface.
+# 4. If node transitions to / boots into BACKUP:
+#    a. Log state event to syslog.
+#    b. Execute OPNsense backend command `interface linkup stop` to tear down link and strip IP.
+# ==============================================================================
+
+# Target physical WAN network interface identifier
+IF="(replace with your WAN interface)"
+
+# Target VLAN interface monitoring CARP status
+CARP_IF="(replace with one of your carp interfaces ex. vtnet0_vlan3)"
+
+# Syslog identifier tag for tracking events in system log
+LOGTAG="wan-carp-hook-boot"
+
+# How many times to retry, and how long to wait between retries, when CARP
+# hasn't settled out of INIT yet (only matters at boot; a real transition
+# event always has a known state immediately).
+MAX_RETRIES=10
+RETRY_DELAY=2
+
+# ------------------------------------------------------------------------------
+# Function: get_carp_state
+# Description: Evaluates system CARP status by checking ifconfig output.
+#              Retries briefly if the interface hasn't negotiated a state yet
+#              (relevant at boot; a transition-triggered run already has one).
+# Returns: "MASTER" if active primary, "BACKUP" for all other stable states.
+# ------------------------------------------------------------------------------
+get_carp_state() {
+    i=0
+    while [ "$i" -lt "$MAX_RETRIES" ]; do
+        OUT=$(ifconfig "$CARP_IF" 2>/dev/null)
+
+        if echo "$OUT" | grep -q 'carp: MASTER'; then
+            echo "MASTER"
+            return
+        fi
+
+        if echo "$OUT" | grep -q 'carp: BACKUP'; then
+            echo "BACKUP"
+            return
+        fi
+
+        # Neither MASTER nor BACKUP matched yet - likely still INIT during
+        # boot negotiation. Wait and retry rather than assuming BACKUP.
+        logger -p daemon.notice -t "$LOGTAG" "CARP state not yet settled on $CARP_IF, retry $i/$MAX_RETRIES"
+        sleep "$RETRY_DELAY"
+        i=$((i + 1))
+    done
+
+    # Exhausted retries without a definitive MASTER read - default safe to BACKUP
+    # (link stays down rather than risking a live IP/MAC conflict).
+    logger -p daemon.notice -t "$LOGTAG" "CARP state still unsettled after $MAX_RETRIES retries, defaulting to BACKUP"
+    echo "BACKUP"
+}
+
+# ------------------------------------------------------------------------------
+# Main Logic Execution
+# ------------------------------------------------------------------------------
+
+# Call function and store return value into STATE variable
+STATE=$(get_carp_state)
+
+# Evaluate state to execute appropriate interface action
+if [ "$STATE" = "MASTER" ]; then
+    # Write informational message to system log
+    logger -p daemon.notice -t "$LOGTAG" "CARP event: Node is MASTER. Starting link for $IF."
+
+    # Trigger OPNsense linkup start to bring up interface and request DHCP/IP
+    /usr/local/sbin/configctl interface linkup start "$IF"
+
+    # Restart Tailscale to rebind tunnel endpoints to active WAN IP
+    /usr/local/sbin/configctl service restart tailscale
+
+else
+    # Write informational message to system log
+    logger -p daemon.notice -t "$LOGTAG" "CARP event: Node is BACKUP. Stopping link for $IF."
+
+    # Trigger OPNsense linkup stop to unassign IP, kill DHCP client, and drop link
+    /usr/local/sbin/configctl interface linkup stop "$IF"
+fi
