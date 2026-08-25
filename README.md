@@ -13,3 +13,7 @@ Script for WAN to be used by a secondary (BACKUP) OPNsense firewall in a HA setu
 <p>This also means that you can search for these logs in the web dashboard under General. Events are logged at the NOTICE level.</p>
 <p>By default this script will also restart tailscale when the CARP state is MASTER. If you either don't have tailscale installed or do not want this behavior then you can comment out or remove that line in the script.</p>
 <p>Another default behavior of this script is that you will need to configure it based on your setup. Specifically, you need to tell the script what your WAN interface name is and the interface name of one of your CARP VIPS. These are at the beginning of the file. I have put placeholders in where they should be. For WAN, you want to replace the placeholder with your own interface name at "IF=" near the beginning of the file and for the CARP VIP interface replace the placeholder at "CARP_IF=". </p>
+
+<p>Another issue is that since this script runs only when there is a carp event it won't run on boot. So, if you reboot the firewall it will already have a WAN ip since the script has not run because there was no CARP change event. I have provided a script that will be put in the /usr/local/etc/rc.syshook.d/start/ directory. For example, I have my script set up as /usr/local/etc/rc.syshook.d/start/50-wan-monitor
+ </p>
+ <p>As with the other script, you will have to update the placeholders with your interface names, and you have the option to remove the part of the script that restarts tailscale.</p>
